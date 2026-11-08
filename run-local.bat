@@ -1,38 +1,24 @@
 @echo off
+title CloudStore Launcher
 echo ========================================================
-echo  Iniciando CloudStore E-Commerce (Modo Local Nativo)
+echo  Iniciando CloudStore E-Commerce (Modo Local)
 echo ========================================================
 echo.
 
-cd /d "%~dp0backend"
-if not exist "venv" (
-    echo Creando entorno virtual de Python...
-    python -m venv venv
-    call venv\Scripts\activate
-    echo Instalando dependencias del backend...
-    pip install -r requirements.txt
-) else (
-    call venv\Scripts\activate
-)
+set "ROOT=%~dp0"
+set "BACKEND=%ROOT%backend"
+set "FRONTEND=%ROOT%frontend"
 
-echo Iniciando Backend FastAPI en segundo plano...
-start "CloudStore Backend (FastAPI)" cmd /k "call venv\Scripts\activate && uvicorn app.main:app --reload --port 8000"
+echo [1/2] Iniciando Backend FastAPI en puerto 8000...
+start "CloudStore Backend (FastAPI)" cmd /k "cd /d "%BACKEND%" && call "%BACKEND%\venv\Scripts\activate.bat" && python -m uvicorn app.main:app --app-dir "%BACKEND%" --host 127.0.0.1 --port 8000 --reload"
 
-cd /d "%~dp0frontend"
-if not exist "node_modules" (
-    echo Instalando dependencias del frontend...
-    call npm install
-)
-
-echo Iniciando Frontend React (Vite)...
-start "CloudStore Frontend (React)" cmd /k "npm run dev"
+echo [2/2] Iniciando Frontend React en puerto 5173...
+start "CloudStore Frontend (React)" cmd /k "cd /d "%FRONTEND%" && npm run dev"
 
 echo.
 echo ========================================================
-echo  Aplicacion iniciada en terminales separadas!
-echo  - Frontend:   http://localhost:5173
-echo  - Backend:    http://localhost:8000/docs
+echo  Todo listo!
+echo  - Frontend: http://localhost:5173
+echo  - Backend:  http://127.0.0.1:8000/docs
 echo ========================================================
-echo Presiona cualquier tecla para salir de este lanzador.
-pause > nul
-
+timeout /t 5
