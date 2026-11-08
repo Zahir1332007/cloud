@@ -115,3 +115,4 @@ SELECT setval('categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM categories)
 SELECT setval('products_id_seq', (SELECT COALESCE(MAX(id), 1) FROM products));
 SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
 SELECT setval('orders_id_seq', (SELECT COALESCE(MAX(id), 1) FROM orders));
+

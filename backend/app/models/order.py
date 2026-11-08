@@ -36,8 +36,16 @@ class Order(Base):
     phone = Column(String(50), nullable=True)
     
     total_amount = Column(Numeric(10, 2), nullable=False)
-    status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False)
-    payment_method = Column(Enum(PaymentMethod), default=PaymentMethod.CREDIT_CARD, nullable=False)
+    status = Column(
+        Enum(OrderStatus, values_callable=lambda obj: [e.value for e in obj], name="orderstatus"),
+        default=OrderStatus.PENDING,
+        nullable=False
+    )
+    payment_method = Column(
+        Enum(PaymentMethod, values_callable=lambda obj: [e.value for e in obj], name="paymentmethod"),
+        default=PaymentMethod.CREDIT_CARD,
+        nullable=False
+    )
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

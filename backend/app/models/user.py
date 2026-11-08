@@ -17,7 +17,11 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.CUSTOMER, nullable=False)
+    role = Column(
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj], name="userrole"),
+        default=UserRole.CUSTOMER,
+        nullable=False
+    )
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
