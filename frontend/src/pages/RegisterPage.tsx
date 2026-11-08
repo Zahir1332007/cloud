@@ -20,7 +20,11 @@ export const RegisterPage: React.FC = () => {
       await register(fullName, email, password);
       navigate('/');
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Error al registrar la cuenta. Intenta con otro correo.');
+      if (!err.response) {
+        setErrorMsg('No se puede conectar con el Backend (FastAPI). Verifica que el servidor backend esté encendido.');
+      } else {
+        setErrorMsg(err.response?.data?.detail || 'Error al registrar la cuenta. Intenta con otro correo.');
+      }
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,7 @@ def list_products(
     min_price: Optional[float] = Query(None, ge=0),
     max_price: Optional[float] = Query(None, ge=0),
     in_stock_only: bool = Query(False),
-    sort: Optional[str] = Query("newest", regex="^(newest|price_asc|price_desc|rating)$"),
+    sort: Optional[str] = Query("newest", pattern="^(newest|price_asc|price_desc|rating)$"),
     page: int = Query(1, ge=1),
     size: int = Query(12, ge=1, le=100)
 ):

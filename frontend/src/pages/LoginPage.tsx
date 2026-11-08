@@ -19,7 +19,11 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Error al iniciar sesión. Verifica tus credenciales.');
+      if (!err.response) {
+        setErrorMsg('No se puede conectar con el Backend (FastAPI). Por favor, asegúrate de haber iniciado el servidor backend en http://localhost:8000.');
+      } else {
+        setErrorMsg(err.response?.data?.detail || 'Error al iniciar sesión. Verifica tus credenciales.');
+      }
     } finally {
       setLoading(false);
     }
