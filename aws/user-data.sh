@@ -53,3 +53,4 @@ chown -R ubuntu:ubuntu "$DEPLOY_DIR"
 
 echo "===> [6/6] Bootstrap completado exitosamente!"
 echo "Para desplegar: sube los archivos a $DEPLOY_DIR y ejecuta: sudo docker compose up -d --build"
+

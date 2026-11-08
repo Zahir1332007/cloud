@@ -146,3 +146,4 @@ Para el despliegue en AWS paso a paso, consulta el documento:
 * **Asignatura:** Computación en la Nube (Cloud Computing) - 6to Ciclo
 * **Institución:** UNAS (Universidad Nacional Agraria de la Selva)
 * **Arquitectura:** Microservicios desacoplados con Docker Compose y Nginx en AWS Free Tier
+

@@ -110,3 +110,4 @@ Outputs:
   SwaggerDocsURL:
     Description: 'Documentacion Interactiva OpenAPI / Swagger'
     Value: !Sub 'http://${CloudStoreEC2Instance.PublicIp}/docs'
+

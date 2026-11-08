@@ -76,3 +76,4 @@ def get_current_admin(
             detail="Permisos insuficientes. Se requiere rol de Administrador."
         )
     return current_user
+

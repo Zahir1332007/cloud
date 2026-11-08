@@ -80,3 +80,4 @@ def root_redirect():
         "health": f"{settings.API_V1_STR}/health",
         "status": "online"
     }
+

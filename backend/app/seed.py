@@ -262,3 +262,4 @@ def seed_database(db: Session = None):
 
 if __name__ == "__main__":
     seed_database()
+

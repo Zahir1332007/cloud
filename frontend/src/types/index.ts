@@ -92,3 +92,4 @@ export interface HealthStatus {
   version: string;
   environment: string;
 }
+

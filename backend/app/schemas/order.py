@@ -60,3 +60,4 @@ class DashboardStats(BaseModel):
     total_products: int
     low_stock_products: int
     recent_orders: List[OrderResponse]
+

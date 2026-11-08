@@ -40,3 +40,4 @@ def health_check(db: Session = Depends(get_db)):
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
     }
+

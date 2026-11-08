@@ -83,3 +83,4 @@ volumes:
 networks:
   cloudstore_net:
     driver: bridge
+

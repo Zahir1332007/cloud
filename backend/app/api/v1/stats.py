@@ -45,3 +45,4 @@ def get_dashboard_stats(
         low_stock_products=low_stock_products,
         recent_orders=recent_orders
     )
+

@@ -86,3 +86,4 @@ def login_swagger_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Ses
 def read_current_user(current_user: User = Depends(get_current_user)):
     """Get profile of current authenticated user."""
     return current_user
+

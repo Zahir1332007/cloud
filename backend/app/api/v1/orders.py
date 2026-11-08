@@ -43,8 +43,12 @@ def create_order(
         order_items_to_create = []
 
         # Lock rows or check stock atomically
+        is_sqlite = "sqlite" in str(db.bind.url) if db.bind else False
         for item in payload.items:
-            product = db.query(Product).filter(Product.id == item.product_id).with_for_update().first()
+            product_query = db.query(Product).filter(Product.id == item.product_id)
+            if not is_sqlite:
+                product_query = product_query.with_for_update()
+            product = product_query.first()
             if not product:
                 raise HTTPException(status_code=404, detail=f"Producto #{item.product_id} no encontrado")
             if not product.is_active:
@@ -161,3 +165,4 @@ def update_order_status(
     db.commit()
     db.refresh(order)
     return order
+

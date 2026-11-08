@@ -194,3 +194,4 @@ sudo docker compose down
 # Ver logs en tiempo real
 sudo docker compose logs -f
 ```
+

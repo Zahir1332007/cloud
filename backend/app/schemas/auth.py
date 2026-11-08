@@ -26,3 +26,4 @@ class RegisterRequest(BaseModel):
     password: str
     full_name: str
     role: Optional[UserRole] = UserRole.CUSTOMER
+

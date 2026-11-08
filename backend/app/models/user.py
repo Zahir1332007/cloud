@@ -23,3 +23,4 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
+

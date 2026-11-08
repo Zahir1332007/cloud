@@ -151,3 +151,4 @@ def delete_product(
     db.delete(product)
     db.commit()
     return None
+
