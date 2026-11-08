@@ -13,3 +13,4 @@ echo  - Backend API Docs:    http://localhost/docs
 echo  - AWS Health Check:    http://localhost/api/v1/health
 echo ========================================================
 pause
+

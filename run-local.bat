@@ -35,3 +35,4 @@ echo  - Backend:    http://localhost:8000/docs
 echo ========================================================
 echo Presiona cualquier tecla para salir de este lanzador.
 pause > nul
+
