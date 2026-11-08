@@ -129,3 +129,4 @@ Para la demostración en vivo ante el docente o evaluador:
    * Mostrar cómo el stock se reduce automáticamente en la base de datos de AWS y se genera un número de seguimiento rastreable en `/track`.
 4. **Verificación Técnica de la API:**
    * Abrir `/docs` para exhibir la documentación Swagger interactiva generada por FastAPI.
+

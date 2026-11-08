@@ -15,12 +15,22 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    # Database
-    # Default to PostgreSQL, will auto-fallback to SQLite if postgresql host is unreachable locally
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:postgres123@localhost:5432/cloudstore"
-    )
+    # Database Credentials (supports both full DATABASE_URL and separate DB_* properties from Elastic Beanstalk / App Runner)
+    DB_HOST: str = os.getenv("DB_HOST", "")
+    DB_PORT: str = os.getenv("DB_PORT", "5432")
+    DB_NAME: str = os.getenv("DB_NAME", "postgres")
+    DB_USER: str = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
+
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        if not self.DATABASE_URL and self.DB_HOST:
+            self.DATABASE_URL = f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode=require"
+        elif not self.DATABASE_URL:
+            self.DATABASE_URL = "postgresql://postgres:postgres123@localhost:5432/cloudstore"
+
     SQLITE_FALLBACK_URL: str = "sqlite:///./cloudstore.db"
 
     # CORS
