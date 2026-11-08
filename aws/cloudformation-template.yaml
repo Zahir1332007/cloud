@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudStore E-Commerce - AWS Free Tier EC2 Infrastructure Stack'
+
+Parameters:
+  InstanceType:
+    Description: 'Tipo de instancia EC2 (t2.micro elegible para capa gratuita en la mayoria de regiones, t3.micro en regiones nuevas)'
+    Type: String
+    Default: 't2.micro'
+    AllowedValues:
+      - 't2.micro'
+      - 't3.micro'
+      - 't3.small'
+
+  KeyName:
+    Description: 'Nombre del Key Pair (.pem) existente para acceder por SSH'
+    Type: AWS::EC2::KeyPair::KeyName
+
+  LatestUbuntuAMI:
+    Description: 'AMI ID de Ubuntu Server 22.04 LTS en tu region'
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+
+Resources:
+  # Security Group con puertos necesarios
+  CloudStoreSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Permitir trafico HTTP (80), HTTPS (443) y SSH (22)'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: 'Acceso administrativo SSH'
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: 'Acceso publico Web HTTP'
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: 'Acceso seguro Web HTTPS'
+      Tags:
+        - Key: Name
+          Value: 'cloudstore-ec2-sg'
+
+  # Instancia EC2 Free Tier
+  CloudStoreEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref LatestUbuntuAMI
+      SecurityGroupIds:
+        - !Ref CloudStoreSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 30 # Limite maximo de almacenamiento gratuito (30GB gp3)
+            VolumeType: gp3
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -e
+          # 1. Configurar SWAP de 2GB
+          fallocate -l 2G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          
+          # 2. Instalar Docker
+          apt-get update -y
+          apt-get install -y ca-certificates curl gnupg git
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          chmod a+r /etc/apt/keyrings/docker.asc
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -y
+          apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+      Tags:
+        - Key: Name
+          Value: 'cloudstore-production-server'
+        - Key: Project
+          Value: 'UNAS-Cloud-Computing'
+
+Outputs:
+  PublicIP:
+    Description: 'IP Publica de la Instancia EC2 en AWS'
+    Value: !GetAtt CloudStoreEC2Instance.PublicIp
+
+  PublicDNS:
+    Description: 'DNS Publico generado por AWS'
+    Value: !GetAtt CloudStoreEC2Instance.PublicDnsName
+
+  WebsiteURL:
+    Description: 'Enlace directo para abrir la Tienda Virtual en el navegador'
+    Value: !Sub 'http://${CloudStoreEC2Instance.PublicIp}'
+
+  HealthCheckURL:
+    Description: 'Health Check de Monitoreo AWS ALB / Route 53'
+    Value: !Sub 'http://${CloudStoreEC2Instance.PublicIp}/api/v1/health'
+
+  SwaggerDocsURL:
+    Description: 'Documentacion Interactiva OpenAPI / Swagger'
+    Value: !Sub 'http://${CloudStoreEC2Instance.PublicIp}/docs'
