@@ -1,24 +1,18 @@
+import os
 import sys
 import psycopg
 
-RDS_HOST = "database-1.cdwwom8ggmi8.us-east-2.rds.amazonaws.com"
-RDS_PORT = 5432
-RDS_DB = "postgres"
-RDS_USER = "postgres"
-RDS_PASS = "CloudStore2026!"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.join(ROOT_DIR, "backend")
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
 
-print(f"1. Conectando a Amazon RDS PostgreSQL en {RDS_HOST}...")
+from app.core.config import settings
+
+print(f"1. Conectando a Amazon RDS PostgreSQL en {settings.DB_HOST or settings.DATABASE_URL.split('@')[-1]}...")
 
 try:
-    conn = psycopg.connect(
-        host=RDS_HOST,
-        port=RDS_PORT,
-        dbname=RDS_DB,
-        user=RDS_USER,
-        password=RDS_PASS,
-        sslmode="require",
-        connect_timeout=15
-    )
+    conn = psycopg.connect(settings.DATABASE_URL, connect_timeout=15)
     print("✓ ¡CONEXIÓN ESTABLECIDA CON ÉXITO A AWS RDS!\n")
 
     # Leer el script SQL completo

@@ -22,6 +22,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application source code
 COPY . /app
 
+# Download Amazon RDS global CA bundle for sslmode=verify-full
+RUN curl -fsSL -o /app/global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
 # Expose API port
 EXPOSE 8000
 

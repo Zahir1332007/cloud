@@ -15,16 +15,23 @@ def create_db_engine():
     if "sqlite" in database_url:
         return create_engine(database_url, connect_args={"check_same_thread": False})
     
+    safe_target = database_url.split("@")[-1]
     try:
-        eng = create_engine(database_url, pool_pre_ping=True, pool_size=10, max_overflow=20)
+        eng = create_engine(
+            database_url,
+            pool_pre_ping=True,
+            pool_size=10,
+            max_overflow=20,
+            connect_args={"connect_timeout": 5},
+        )
         # Test connection with a short timeout
         with eng.connect() as conn:
             conn.execute(text("SELECT 1"))
-        logger.info(f"Conectado exitosamente a PostgreSQL: {database_url.split('@')[-1]}")
+        logger.info(f"Conectado exitosamente a PostgreSQL: {safe_target}")
         return eng
     except Exception as e:
         logger.warning(
-            f"PostgreSQL no está activo en {database_url}. "
+            f"PostgreSQL no está activo en {safe_target}. "
             f"Activando base de datos SQLite ({settings.SQLITE_FALLBACK_URL}) para desarrollo local sin Docker: {e}"
         )
         return create_engine(

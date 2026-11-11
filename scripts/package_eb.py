@@ -9,6 +9,7 @@ FILES_TO_ADD = [
     "application.py",
     "Procfile",
     "requirements.txt",
+    "global-bundle.pem",
 ]
 
 DIRS_TO_ADD = [

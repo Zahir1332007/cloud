@@ -1,10 +1,15 @@
 import os
+import sys
 import psycopg
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:CloudStore2026!@database-1.cdwwom8ggmi8.us-east-2.rds.amazonaws.com:5432/postgres?sslmode=require"
-)
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.join(ROOT_DIR, "backend")
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
+
+from app.core.config import settings
+
+DATABASE_URL = settings.DATABASE_URL
 
 def inspect_database():
     print("=" * 60)

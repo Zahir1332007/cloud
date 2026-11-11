@@ -5,6 +5,7 @@ Thumbs.db
 # Environment & Secrets
 .env
 *.pem
+!global-bundle.pem
 *.key
 
 # Python
