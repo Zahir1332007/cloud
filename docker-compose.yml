@@ -1,28 +1,4 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: cloudstore_db
-    restart: always
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-mysql123}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-cloudstore}
-      MYSQL_USER: ${MYSQL_USER:-cloudstore}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mysql123}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD:-mysql123}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - cloudstore_net
-    deploy:
-      resources:
-        limits:
-          memory: 350M
-
   backend:
     build:
       context: ./backend
@@ -30,26 +6,23 @@ services:
     container_name: cloudstore_api
     restart: always
     environment:
-    PROJECT_NAME: "CloudStore API"
-    ENVIRONMENT: production
-    DB_ENGINE: mysql
-    DB_HOST: ${DB_HOST:-mysql}
-    DB_PORT: 3306
-    DB_NAME: ${DB_NAME:-cloudstore}
-    DB_USER: ${DB_USER:-cloudstore}
-    DB_PASSWORD: ${DB_PASSWORD:-mysql123}
-    DB_SSLMODE: ${DB_SSLMODE:-disable}
-    SECRET_KEY: ${SECRET_KEY:-aws-cloudstore-production-jwt-secret-key-2026}
-    ACCESS_TOKEN_EXPIRE_MINUTES: 10080
-    depends_on:
-      mysql:
-        condition: service_healthy
+      PROJECT_NAME: "CloudStore API"
+      ENVIRONMENT: production
+      DB_ENGINE: mysql
+      DB_HOST: ${DB_HOST:-database-1.cdwwom8ggmi8.us-east-2.rds.amazonaws.com}
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-cloudstore}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      SECRET_KEY: ${SECRET_KEY:-aws-cloudstore-production-jwt-secret-key-2026}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 10080
     networks:
       - cloudstore_net
     deploy:
       resources:
         limits:
-          memory: 300M
+          memory: 350M
 
   frontend:
     build:
@@ -64,7 +37,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 150M
+          memory: 200M
 
   nginx:
     image: nginx:alpine
@@ -83,10 +56,6 @@ services:
       resources:
         limits:
           memory: 100M
-
-volumes:
-  mysql_data:
-    driver: local
 
 networks:
   cloudstore_net:
