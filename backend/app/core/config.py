@@ -35,13 +35,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    # Database Credentials (supports both separate DB_* fields and full DATABASE_URL)
+    # Database Credentials (supports MySQL and PostgreSQL via DB_* fields or full DATABASE_URL)
+    DB_ENGINE: str = "mysql"
     DB_HOST: str = ""
-    DB_PORT: str = "5432"
-    DB_NAME: str = "postgres"
-    DB_USER: str = "postgres"
+    DB_PORT: str = "3306"
+    DB_NAME: str = "cloudstore"
+    DB_USER: str = "root"
     DB_PASSWORD: str = ""
-    DB_SSLMODE: str = "verify-full"
+    DB_SSLMODE: str = "disable"
     DB_SSLROOTCERT: str = "./global-bundle.pem"
 
     DATABASE_URL: str = ""
@@ -66,28 +67,41 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @property
+    def resolved_sslrootcert(self) -> str:
+        """Return resolved CA bundle path when SSL verification is enabled."""
+        if self.DB_SSLMODE in ("disable", "allow", ""):
+            return ""
+        return _resolve_cert_path(self.DB_SSLROOTCERT)
+
     @model_validator(mode="after")
     def assemble_database_url(self) -> "Settings":
         """Build DATABASE_URL from separated DB_* fields when DATABASE_URL is not explicitly provided."""
         if not self.DATABASE_URL and self.DB_HOST:
             user = quote_plus(self.DB_USER)
             password = quote_plus(self.DB_PASSWORD)
-            port = self.DB_PORT or "5432"
-            url = f"postgresql://{user}:{password}@{self.DB_HOST}:{port}/{self.DB_NAME}"
+            engine = (self.DB_ENGINE or "mysql").lower()
 
-            query_params = {}
-            if self.DB_SSLMODE:
-                query_params["sslmode"] = self.DB_SSLMODE
-            if self.DB_SSLROOTCERT and self.DB_SSLMODE not in ("disable", "allow"):
-                resolved_cert = _resolve_cert_path(self.DB_SSLROOTCERT)
-                if resolved_cert:
-                    query_params["sslrootcert"] = resolved_cert
-
-            if query_params:
-                url = f"{url}?{urlencode(query_params, quote_via=quote)}"
-            self.DATABASE_URL = url
+            if engine.startswith("mysql"):
+                port = self.DB_PORT or "3306"
+                self.DATABASE_URL = (
+                    f"mysql+pymysql://{user}:{password}@{self.DB_HOST}:{port}/{self.DB_NAME}?charset=utf8mb4"
+                )
+            else:
+                port = self.DB_PORT or "5432"
+                url = f"postgresql://{user}:{password}@{self.DB_HOST}:{port}/{self.DB_NAME}"
+                query_params = {}
+                if self.DB_SSLMODE:
+                    query_params["sslmode"] = self.DB_SSLMODE
+                if self.DB_SSLROOTCERT and self.DB_SSLMODE not in ("disable", "allow"):
+                    resolved_cert = _resolve_cert_path(self.DB_SSLROOTCERT)
+                    if resolved_cert:
+                        query_params["sslrootcert"] = resolved_cert
+                if query_params:
+                    url = f"{url}?{urlencode(query_params, quote_via=quote)}"
+                self.DATABASE_URL = url
         elif not self.DATABASE_URL:
-            self.DATABASE_URL = "postgresql://postgres:postgres123@localhost:5432/cloudstore"
+            self.DATABASE_URL = "mysql+pymysql://root:mysql123@localhost:3306/cloudstore?charset=utf8mb4"
         return self
 
 

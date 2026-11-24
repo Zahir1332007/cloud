@@ -19,10 +19,11 @@ services:
     environment:
       PROJECT_NAME: ${PROJECT_NAME:-CloudStore E-Commerce API}
       ENVIRONMENT: ${ENVIRONMENT:-production}
-      DB_HOST: ${DB_HOST:-database-1.cdwwom8ggmi8.us-east-2.rds.amazonaws.com}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-postgres}
-      DB_USER: ${DB_USER:-postgres}
+      DB_ENGINE: ${DB_ENGINE:-mysql}
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-cloudstore}
+      DB_USER: ${DB_USER:-admin}
       DB_PASSWORD: ${DB_PASSWORD:-CloudStore2026!}
       DB_SSLMODE: ${DB_SSLMODE:-verify-full}
       DB_SSLROOTCERT: ${DB_SSLROOTCERT:-./global-bundle.pem}

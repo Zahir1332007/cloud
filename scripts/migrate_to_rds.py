@@ -1,61 +1,71 @@
 import os
 import sys
-import psycopg
+from pathlib import Path
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BACKEND_DIR = os.path.join(ROOT_DIR, "backend")
-if BACKEND_DIR not in sys.path:
-    sys.path.insert(0, BACKEND_DIR)
+ROOT_DIR = Path(__file__).resolve().parent.parent
+BACKEND_DIR = ROOT_DIR / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 from app.core.config import settings
 
-print(f"1. Conectando a Amazon RDS PostgreSQL en {settings.DB_HOST or settings.DATABASE_URL.split('@')[-1]}...")
 
-try:
-    conn = psycopg.connect(settings.DATABASE_URL, connect_timeout=15)
-    print("✓ ¡CONEXIÓN ESTABLECIDA CON ÉXITO A AWS RDS!\n")
+def migrate():
+    is_mysql = settings.DATABASE_URL.startswith("mysql")
+    sql_path = ROOT_DIR / "aws" / ("init_rds_mysql.sql" if is_mysql else "init_rds.sql")
+    target = settings.DB_HOST or settings.DATABASE_URL.split("@")[-1]
+    engine_name = "MySQL" if is_mysql else "PostgreSQL"
 
-    # Leer el script SQL completo
-    print("2. Leyendo script DDL y de datos semilla (aws/init_rds.sql)...")
-    with open("aws/init_rds.sql", "r", encoding="utf-8") as f:
-        sql = f.read()
+    print(f"1. Conectando a {engine_name} en {target}...")
+    try:
+        sql = sql_path.read_text(encoding="utf-8")
+        if is_mysql:
+            import pymysql
 
-    # Ejecutar la migración
-    print("3. Creando tablas (users, categories, products, orders, order_items) en AWS...")
-    with conn.cursor() as cur:
-        cur.execute(sql)
-    conn.commit()
-    print("✓ ¡TABLAS Y DATOS MIGRADOS EXITOSAMENTE A AWS RDS!\n")
+            ssl_cfg = {"ca": settings.resolved_sslrootcert} if settings.resolved_sslrootcert else None
+            conn = pymysql.connect(
+                host=settings.DB_HOST or "localhost",
+                port=int(settings.DB_PORT or 3306),
+                user=settings.DB_USER or "root",
+                password=settings.DB_PASSWORD,
+                database=settings.DB_NAME or "cloudstore",
+                charset="utf8mb4",
+                ssl=ssl_cfg,
+                connect_timeout=15,
+            )
+            print(f"✓ ¡CONEXIÓN ESTABLECIDA CON ÉXITO A {engine_name}!\n")
+            print(f"2. Ejecutando script DDL y datos semilla ({sql_path.name})...")
+            with conn.cursor() as cur:
+                for stmt in [s.strip() for s in sql.split(";") if s.strip()]:
+                    cur.execute(stmt)
+            conn.commit()
+            with conn.cursor() as cur:
+                cur.execute("SHOW TABLES;")
+                tables = [r[0] for r in cur.fetchall()]
+                print("  - Tablas encontradas:", tables)
+            conn.close()
+        else:
+            import psycopg
 
-    # Verificación
-    print("4. Verificando integridad de los datos en la nube...")
-    with conn.cursor() as cur:
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
-        tables = [r[0] for r in cur.fetchall()]
-        print("  - Tablas encontradas en AWS:", tables)
+            conn = psycopg.connect(settings.DATABASE_URL, connect_timeout=15)
+            print(f"✓ ¡CONEXIÓN ESTABLECIDA CON ÉXITO A {engine_name}!\n")
+            print(f"2. Ejecutando script DDL y datos semilla ({sql_path.name})...")
+            with conn.cursor() as cur:
+                cur.execute(sql)
+            conn.commit()
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+                )
+                tables = [r[0] for r in cur.fetchall()]
+                print("  - Tablas encontradas:", tables)
+            conn.close()
 
-        cur.execute("SELECT COUNT(*) FROM categories")
-        cat_count = cur.fetchone()[0]
-        print(f"  - Categorías insertadas: {cat_count}")
+        print("\n✓ ¡TABLAS Y DATOS MIGRADOS EXITOSAMENTE!")
+    except Exception as e:
+        print(f"Error al conectar con {engine_name}: {e}")
+        sys.exit(1)
 
-        cur.execute("SELECT COUNT(*) FROM products")
-        prod_count = cur.fetchone()[0]
-        print(f"  - Productos insertados: {prod_count}")
 
-        cur.execute("SELECT COUNT(*) FROM users")
-        user_count = cur.fetchone()[0]
-        print(f"  - Usuarios insertados: {user_count}")
-
-        cur.execute("SELECT COUNT(*) FROM orders")
-        order_count = cur.fetchone()[0]
-        print(f"  - Órdenes demo insertadas: {order_count}")
-
-    conn.close()
-    print("\n==================================================================")
-    print("  ¡LA BASE DE DATOS ESTÁ 100% OPERATIVA EN AMAZON WEB SERVICES!")
-    print("==================================================================")
-
-except Exception as e:
-    print("Error al conectar con RDS:", str(e))
-    sys.exit(1)
-
+if __name__ == "__main__":
+    migrate()
